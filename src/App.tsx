@@ -11,6 +11,8 @@ import Members from "./pages/Members";
 import UserManagement from "./pages/UserManagement";
 import UktEvents from "./pages/UktEvents";
 import UktDetail from "./pages/UktDetail";
+import CompetitionEvents from "./pages/CompetitionEvents";
+import CompetitionDetail from "./pages/CompetitionDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -62,6 +64,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <UktDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/kompetisi"
+              element={
+                <ProtectedRoute>
+                  <CompetitionEvents />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/kompetisi/:id"
+              element={
+                <ProtectedRoute>
+                  <CompetitionDetail />
                 </ProtectedRoute>
               }
             />

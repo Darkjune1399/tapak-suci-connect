@@ -14,6 +14,214 @@ export type Database = {
   }
   public: {
     Tables: {
+      competition_categories: {
+        Row: {
+          berat_max: number | null
+          berat_min: number | null
+          competition_id: string
+          created_at: string
+          id: string
+          jenis_kelamin: string
+          kelompok_umur: string
+          keterangan: string | null
+          nama_kategori: string
+        }
+        Insert: {
+          berat_max?: number | null
+          berat_min?: number | null
+          competition_id: string
+          created_at?: string
+          id?: string
+          jenis_kelamin?: string
+          kelompok_umur: string
+          keterangan?: string | null
+          nama_kategori: string
+        }
+        Update: {
+          berat_max?: number | null
+          berat_min?: number | null
+          competition_id?: string
+          created_at?: string
+          id?: string
+          jenis_kelamin?: string
+          kelompok_umur?: string
+          keterangan?: string | null
+          nama_kategori?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_categories_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_matches: {
+        Row: {
+          category_id: string
+          created_at: string
+          gelanggang: number | null
+          id: string
+          match_number: number
+          nomor_partai: number | null
+          participant1_id: string | null
+          participant2_id: string | null
+          round: number
+          status: string
+          updated_at: string
+          waktu_mulai: string | null
+          winner_id: string | null
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          gelanggang?: number | null
+          id?: string
+          match_number: number
+          nomor_partai?: number | null
+          participant1_id?: string | null
+          participant2_id?: string | null
+          round: number
+          status?: string
+          updated_at?: string
+          waktu_mulai?: string | null
+          winner_id?: string | null
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          gelanggang?: number | null
+          id?: string
+          match_number?: number
+          nomor_partai?: number | null
+          participant1_id?: string | null
+          participant2_id?: string | null
+          round?: number
+          status?: string
+          updated_at?: string
+          waktu_mulai?: string | null
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_matches_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "competition_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_matches_participant1_id_fkey"
+            columns: ["participant1_id"]
+            isOneToOne: false
+            referencedRelation: "competition_participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_matches_participant2_id_fkey"
+            columns: ["participant2_id"]
+            isOneToOne: false
+            referencedRelation: "competition_participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_matches_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "competition_participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_participants: {
+        Row: {
+          berat_badan: number | null
+          category_id: string
+          created_at: string
+          id: string
+          member_id: string
+          seed_number: number | null
+        }
+        Insert: {
+          berat_badan?: number | null
+          category_id: string
+          created_at?: string
+          id?: string
+          member_id: string
+          seed_number?: number | null
+        }
+        Update: {
+          berat_badan?: number | null
+          category_id?: string
+          created_at?: string
+          id?: string
+          member_id?: string
+          seed_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_participants_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "competition_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_participants_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitions: {
+        Row: {
+          catatan: string | null
+          created_at: string
+          created_by: string
+          id: string
+          jumlah_gelanggang: number
+          lokasi: string
+          nama_kompetisi: string
+          status: string
+          tanggal_mulai: string
+          tanggal_selesai: string | null
+          updated_at: string
+          waktu_per_pertandingan: number
+        }
+        Insert: {
+          catatan?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          jumlah_gelanggang?: number
+          lokasi: string
+          nama_kompetisi: string
+          status?: string
+          tanggal_mulai: string
+          tanggal_selesai?: string | null
+          updated_at?: string
+          waktu_per_pertandingan?: number
+        }
+        Update: {
+          catatan?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          jumlah_gelanggang?: number
+          lokasi?: string
+          nama_kompetisi?: string
+          status?: string
+          tanggal_mulai?: string
+          tanggal_selesai?: string | null
+          updated_at?: string
+          waktu_per_pertandingan?: number
+        }
+        Relationships: []
+      }
       members: {
         Row: {
           cabang: string | null

@@ -13,12 +13,13 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Shield, Users, LayoutDashboard, LogOut, UserCog, GraduationCap } from "lucide-react";
+import { Shield, Users, LayoutDashboard, LogOut, UserCog, GraduationCap, Trophy } from "lucide-react";
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, roles: ["super_admin", "penilai", "komite"] },
   { title: "Anggota", url: "/members", icon: Users, roles: ["super_admin", "penilai", "komite"] },
   { title: "UKT", url: "/ukt", icon: GraduationCap, roles: ["super_admin", "penilai", "komite"] },
+  { title: "Kompetisi", url: "/kompetisi", icon: Trophy, roles: ["super_admin", "komite"] },
   { title: "Kelola User", url: "/users", icon: UserCog, roles: ["super_admin"] },
 ];
 
