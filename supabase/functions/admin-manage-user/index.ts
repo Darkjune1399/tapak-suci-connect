@@ -18,10 +18,7 @@ Deno.serve(async (req) => {
     // Verify caller is super_admin
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user: caller } } = await createClient(
-      supabaseUrl,
-      Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!
-    ).auth.getUser(token);
+    const { data: { user: caller } } = await supabaseAdmin.auth.getUser(token);
 
     if (!caller) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
