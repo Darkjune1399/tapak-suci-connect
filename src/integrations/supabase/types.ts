@@ -162,6 +162,144 @@ export type Database = {
         }
         Relationships: []
       }
+      ukt_events: {
+        Row: {
+          catatan: string | null
+          created_at: string
+          created_by: string
+          id: string
+          lokasi: string
+          nama_event: string
+          status: string
+          tanggal: string
+          updated_at: string
+        }
+        Insert: {
+          catatan?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          lokasi: string
+          nama_event: string
+          status?: string
+          tanggal: string
+          updated_at?: string
+        }
+        Update: {
+          catatan?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          lokasi?: string
+          nama_event?: string
+          status?: string
+          tanggal?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ukt_participants: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          member_id: string
+          nilai_akhir: number | null
+          status: string
+          target_rank_id: number
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          member_id: string
+          nilai_akhir?: number | null
+          status?: string
+          target_rank_id: number
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          member_id?: string
+          nilai_akhir?: number | null
+          status?: string
+          target_rank_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ukt_participants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "ukt_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ukt_participants_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ukt_participants_target_rank_id_fkey"
+            columns: ["target_rank_id"]
+            isOneToOne: false
+            referencedRelation: "ranks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ukt_scores: {
+        Row: {
+          catatan: string | null
+          created_at: string
+          id: string
+          nilai_aik: number
+          nilai_fisik_mental: number
+          nilai_ilmu_pencak: number
+          nilai_kesehatan: number
+          nilai_organisasi: number
+          participant_id: string
+          penilai_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          catatan?: string | null
+          created_at?: string
+          id?: string
+          nilai_aik?: number
+          nilai_fisik_mental?: number
+          nilai_ilmu_pencak?: number
+          nilai_kesehatan?: number
+          nilai_organisasi?: number
+          participant_id: string
+          penilai_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          catatan?: string | null
+          created_at?: string
+          id?: string
+          nilai_aik?: number
+          nilai_fisik_mental?: number
+          nilai_ilmu_pencak?: number
+          nilai_kesehatan?: number
+          nilai_organisasi?: number
+          participant_id?: string
+          penilai_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ukt_scores_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "ukt_participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string

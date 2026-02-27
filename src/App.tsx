@@ -9,6 +9,8 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Members from "./pages/Members";
 import UserManagement from "./pages/UserManagement";
+import UktEvents from "./pages/UktEvents";
+import UktDetail from "./pages/UktDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +46,22 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["super_admin"]}>
                   <UserManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ukt"
+              element={
+                <ProtectedRoute>
+                  <UktEvents />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ukt/:id"
+              element={
+                <ProtectedRoute>
+                  <UktDetail />
                 </ProtectedRoute>
               }
             />
