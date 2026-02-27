@@ -189,28 +189,53 @@ function MemberForm({ ranks, member, onSaved }: { ranks: Rank[]; member: Member 
     no_whatsapp: member?.no_whatsapp || "",
     status_aktif: member?.status_aktif ?? true,
   });
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(member?.foto_url || null);
   const [saving, setSaving] = useState(false);
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPhotoFile(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const uploadPhoto = async (memberId: string): Promise<string | null> => {
+    if (!photoFile) return member?.foto_url || null;
+    const ext = photoFile.name.split(".").pop();
+    const path = `${memberId}.${ext}`;
+    const { error } = await supabase.storage.from("member-photos").upload(path, photoFile, { upsert: true });
+    if (error) throw error;
+    const { data: urlData } = supabase.storage.from("member-photos").getPublicUrl(path);
+    return urlData.publicUrl;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const payload = {
-      ...form,
-      tingkatan_id: parseInt(form.tingkatan_id),
-    };
+    try {
+      const payload = {
+        ...form,
+        tingkatan_id: parseInt(form.tingkatan_id),
+      };
 
-    let error;
-    if (member) {
-      ({ error } = await supabase.from("members").update(payload).eq("id", member.id));
-    } else {
-      ({ error } = await supabase.from("members").insert(payload));
-    }
-
-    if (error) {
-      toast({ title: "Gagal menyimpan", description: error.message, variant: "destructive" });
-    } else {
+      if (member) {
+        const foto_url = await uploadPhoto(member.id);
+        const { error } = await supabase.from("members").update({ ...payload, foto_url }).eq("id", member.id);
+        if (error) throw error;
+      } else {
+        const { data: inserted, error } = await supabase.from("members").insert(payload).select("id").single();
+        if (error) throw error;
+        if (photoFile && inserted) {
+          const foto_url = await uploadPhoto(inserted.id);
+          await supabase.from("members").update({ foto_url }).eq("id", inserted.id);
+        }
+      }
       toast({ title: member ? "Data diperbarui" : "Anggota ditambahkan" });
       onSaved();
+    } catch (err: any) {
+      toast({ title: "Gagal menyimpan", description: err.message, variant: "destructive" });
     }
     setSaving(false);
   };
@@ -219,6 +244,15 @@ function MemberForm({ ranks, member, onSaved }: { ranks: Rank[]; member: Member 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label>Foto</Label>
+        <div className="flex items-center gap-4">
+          {photoPreview && (
+            <img src={photoPreview} alt="Preview" className="h-16 w-16 rounded-full object-cover border" />
+          )}
+          <Input type="file" accept="image/*" onChange={handlePhotoChange} />
+        </div>
+      </div>
       <div className="space-y-2">
         <Label>Nama Lengkap *</Label>
         <Input value={form.nama_lengkap} onChange={(e) => set("nama_lengkap", e.target.value)} required />
