@@ -96,12 +96,6 @@ export default function Login() {
               {isLoading ? isSignUp ? "Mendaftar..." : "Masuk..." : isSignUp ? "Daftar" : "Masuk"}
             </Button>
             <p className="text-center text-sm text-muted-foreground">
-              {isSignUp ? "Sudah punya akun?" : "Belum punya akun?"}{" "}
-              
-
-
-
-
 
 
             </p>
