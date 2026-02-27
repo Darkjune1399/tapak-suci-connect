@@ -370,20 +370,56 @@ export default function CompetitionDetail() {
       return;
     }
 
-    // Advance winner to next round
+    // Advance winner to next round, then cascade BYEs
     const totalRounds = getRoundCount(participants.length);
-    if (match.round < totalRounds) {
-      const nextRound = match.round + 1;
-      const nextMatchNumber = Math.ceil(match.match_number / 2);
-      const isTopSlot = match.match_number % 2 === 1;
+    let currentWinnerId = winnerId;
+    let currentRound = match.round;
+    let currentMatchNumber = match.match_number;
 
-      const nextMatch = matches.find(
-        (m) => m.round === nextRound && m.match_number === nextMatchNumber
+    // Fetch latest matches from DB for accurate state
+    const { data: latestMatches } = await supabase
+      .from("competition_matches")
+      .select("*")
+      .eq("category_id", selectedCat!)
+      .order("round")
+      .order("match_number");
+
+    const matchesLocal = new Map<string, any>();
+    latestMatches?.forEach((m: any) => matchesLocal.set(m.id, { ...m }));
+
+    while (currentRound < totalRounds) {
+      const nextRound = currentRound + 1;
+      const nextMatchNumber = Math.ceil(currentMatchNumber / 2);
+      const isTopSlot = currentMatchNumber % 2 === 1;
+
+      const nextMatch = Array.from(matchesLocal.values()).find(
+        (m: any) => m.round === nextRound && m.match_number === nextMatchNumber
       );
 
-      if (nextMatch) {
-        const updateField = isTopSlot ? { participant1_id: winnerId } : { participant2_id: winnerId };
-        await supabase.from("competition_matches").update(updateField).eq("id", nextMatch.id);
+      if (!nextMatch) break;
+
+      // Place winner in the correct slot
+      const field = isTopSlot ? "participant1_id" : "participant2_id";
+      await supabase.from("competition_matches").update({ [field]: currentWinnerId }).eq("id", nextMatch.id);
+      matchesLocal.get(nextMatch.id)[field] = currentWinnerId;
+
+      // Check if next match is now a BYE (only one participant)
+      const updated = matchesLocal.get(nextMatch.id);
+      const p1 = updated.participant1_id;
+      const p2 = updated.participant2_id;
+      const hasOnlyOne = (p1 && !p2) || (!p1 && p2);
+
+      if (hasOnlyOne) {
+        const autoWinner = p1 || p2;
+        await supabase.from("competition_matches").update({ winner_id: autoWinner, status: "bye" }).eq("id", nextMatch.id);
+        matchesLocal.get(nextMatch.id).winner_id = autoWinner;
+        matchesLocal.get(nextMatch.id).status = "bye";
+        currentWinnerId = autoWinner;
+        currentRound = nextRound;
+        currentMatchNumber = nextMatchNumber;
+        // Continue cascading
+      } else {
+        break;
       }
     }
 
