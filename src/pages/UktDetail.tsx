@@ -13,8 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, ClipboardEdit, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, ClipboardEdit, CheckCircle2, XCircle, FileText } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import { generateUktReport } from "@/lib/ukt-report";
 
 type Rank = Tables<"ranks">;
 
@@ -177,6 +178,44 @@ export default function UktDetail() {
     return <Badge variant="outline">Terdaftar</Badge>;
   };
 
+  const handleGenerateReport = async () => {
+    if (!event) return;
+    // Fetch all scores with penilai info
+    const participantIds = participants.map(p => p.id);
+    const { data: allScores } = await supabase
+      .from("ukt_scores")
+      .select("*")
+      .in("participant_id", participantIds);
+
+    // Fetch penilai profiles
+    const penilaiIds = [...new Set(allScores?.map(s => s.penilai_user_id) || [])];
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("user_id, full_name")
+      .in("user_id", penilaiIds);
+
+    const profileMap = new Map<string, string>();
+    profiles?.forEach(p => profileMap.set(p.user_id, p.full_name || "Penilai"));
+
+    // Group scores by participant name
+    const scoresByName: Record<string, any[]> = {};
+    participants.forEach(p => {
+      const pScores = allScores?.filter(s => s.participant_id === p.id) || [];
+      scoresByName[p.member_name] = pScores.map(s => ({
+        participant_id: s.participant_id,
+        penilai_name: profileMap.get(s.penilai_user_id) || "Penilai",
+        nilai_aik: Number(s.nilai_aik),
+        nilai_ilmu_pencak: Number(s.nilai_ilmu_pencak),
+        nilai_organisasi: Number(s.nilai_organisasi),
+        nilai_fisik_mental: Number(s.nilai_fisik_mental),
+        nilai_kesehatan: Number(s.nilai_kesehatan),
+      }));
+    });
+
+    generateUktReport(event, participants, scoresByName);
+    toast({ title: "Laporan berhasil di-generate" });
+  };
+
   // Available members = not already participant
   const existingMemberIds = new Set(participants.map(p => p.member_id));
   const availableMembers = members.filter(m => !existingMemberIds.has(m.id));
@@ -192,16 +231,20 @@ export default function UktDetail() {
   return (
     <AppLayout>
       <div className="space-y-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-1">
           <Button variant="ghost" size="icon" onClick={() => navigate("/ukt")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold">{event?.nama_event || "..."}</h1>
             <p className="text-sm text-muted-foreground">
               {event && `${new Date(event.tanggal).toLocaleDateString("id-ID")} • ${event.lokasi}`}
             </p>
           </div>
+          <Button variant="outline" size="sm" onClick={handleGenerateReport} disabled={participants.length === 0}>
+            <FileText className="mr-2 h-4 w-4" />
+            Laporan PDF
+          </Button>
         </div>
 
         {event?.catatan && (
