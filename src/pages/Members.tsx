@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { MemberImport } from "@/components/members/MemberImport";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Member = Tables<"members"> & { ranks?: { name: string } | null };
@@ -75,10 +76,12 @@ export default function Members() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-bold">Anggota</h1>
           {canEdit && (
-            <Dialog open={dialogOpen} onOpenChange={(v) => { setDialogOpen(v); if (!v) setEditing(null); }}>
-              <DialogTrigger asChild>
-                <Button><Plus className="mr-2 h-4 w-4" />Tambah Anggota</Button>
-              </DialogTrigger>
+            <div className="flex flex-wrap gap-2">
+              <MemberImport ranks={ranks} onImported={fetchMembers} />
+              <Dialog open={dialogOpen} onOpenChange={(v) => { setDialogOpen(v); if (!v) setEditing(null); }}>
+                <DialogTrigger asChild>
+                  <Button><Plus className="mr-2 h-4 w-4" />Tambah Anggota</Button>
+                </DialogTrigger>
               <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
                 <DialogHeader>
                   <DialogTitle>{editing ? "Edit Anggota" : "Tambah Anggota Baru"}</DialogTitle>
@@ -89,7 +92,8 @@ export default function Members() {
                   onSaved={() => { setDialogOpen(false); setEditing(null); fetchMembers(); }}
                 />
               </DialogContent>
-            </Dialog>
+              </Dialog>
+            </div>
           )}
         </div>
 
