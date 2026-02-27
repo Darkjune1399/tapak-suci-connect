@@ -12,6 +12,7 @@ interface MatchData {
   status: string;
   nomor_partai: number | null;
   gelanggang: number | null;
+  waktu_mulai: string | null;
 }
 
 interface ParticipantInfo {
@@ -61,19 +62,23 @@ export function BracketView({ matches, participants, totalRounds, onSelectWinner
 
   return (
     <div className="overflow-x-auto pb-4">
-      <div className="flex gap-6 min-w-max">
+      <div className="flex gap-8 min-w-max items-start">
         {roundGroups.map((roundMatches, roundIdx) => {
           const round = roundIdx + 1;
-          // Each subsequent round needs more vertical spacing
-          const matchHeight = 80; // px per match slot
-          const gap = matchHeight * (Math.pow(2, roundIdx) - 1);
+          // Increase spacing progressively for each round
+          const matchHeight = 96; // px per match card
+          const spaceBetween = matchHeight * (Math.pow(2, roundIdx) - 1) + 24 * roundIdx;
+          const topPadding = roundIdx === 0 ? 0 : (matchHeight + spaceBetween) / 2 - matchHeight / 2;
 
           return (
-            <div key={round} className="flex flex-col items-center" style={{ minWidth: 220 }}>
-              <div className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+            <div key={round} className="flex flex-col items-center" style={{ minWidth: 230 }}>
+              <div className="text-xs font-semibold text-muted-foreground mb-4 uppercase tracking-wide">
                 {getRoundLabel(round, totalRounds)}
               </div>
-              <div className="flex flex-col justify-around flex-1 w-full" style={{ gap: `${gap}px` }}>
+              <div
+                className="flex flex-col w-full"
+                style={{ gap: `${spaceBetween}px`, paddingTop: `${topPadding}px` }}
+              >
                 {roundMatches.map((match) => {
                   const p1Name = getName(match.participant1_id);
                   const p2Name = getName(match.participant2_id);
@@ -89,15 +94,20 @@ export function BracketView({ matches, participants, totalRounds, onSelectWinner
                   return (
                     <div key={match.id} className="relative">
                       {match.nomor_partai && (
-                        <span className="absolute -top-4 left-1 text-[10px] text-muted-foreground">
+                        <span className="absolute -top-5 left-1 text-[10px] text-muted-foreground">
                           P{match.nomor_partai}
                           {match.gelanggang ? ` • G${match.gelanggang}` : ""}
                         </span>
                       )}
+                      {match.waktu_mulai && (
+                        <span className="absolute -top-5 right-1 text-[10px] text-muted-foreground">
+                          {new Date(match.waktu_mulai).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      )}
                       <div
                         className={cn(
-                          "rounded-lg border overflow-hidden text-sm",
-                          isBye && "opacity-50",
+                          "rounded-lg border overflow-hidden text-sm shadow-sm",
+                          isBye && "opacity-40 border-dashed",
                           isCompleted && "border-accent"
                         )}
                       >
@@ -110,7 +120,7 @@ export function BracketView({ matches, participants, totalRounds, onSelectWinner
                             onSelectWinner?.(match.id, match.participant1_id)
                           }
                           className={cn(
-                            "w-full flex items-center gap-2 px-3 py-2 text-left border-b transition-colors",
+                            "w-full flex items-center gap-2 px-3 py-2.5 text-left border-b transition-colors",
                             match.winner_id === match.participant1_id &&
                               "bg-accent/10 font-semibold text-accent-foreground",
                             canSelectWinner && "hover:bg-muted cursor-pointer",
@@ -131,7 +141,7 @@ export function BracketView({ matches, participants, totalRounds, onSelectWinner
                             onSelectWinner?.(match.id, match.participant2_id)
                           }
                           className={cn(
-                            "w-full flex items-center gap-2 px-3 py-2 text-left transition-colors",
+                            "w-full flex items-center gap-2 px-3 py-2.5 text-left transition-colors",
                             match.winner_id === match.participant2_id &&
                               "bg-accent/10 font-semibold text-accent-foreground",
                             canSelectWinner && "hover:bg-muted cursor-pointer",

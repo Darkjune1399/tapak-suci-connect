@@ -13,9 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Shuffle, CalendarClock } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Shuffle, CalendarClock, FileText } from "lucide-react";
 import { BracketView } from "@/components/competition/BracketView";
 import { generateBracket, getRoundCount, type BracketParticipant } from "@/lib/bracket-algorithm";
+import { generateCompetitionReport } from "@/lib/competition-report";
 
 const KATEGORI_OPTIONS = ["Tanding", "Pemasalan", "Prestasi", "Seni"];
 const UMUR_OPTIONS = ["Pra Usia Dini", "Usia Dini 1", "Usia Dini 2", "Pra-Remaja", "Remaja", "Dewasa"];
@@ -260,10 +261,35 @@ export default function CompetitionDetail() {
       status: m.status,
     }));
 
-    const { error } = await supabase.from("competition_matches").insert(inserts);
+    const { data: insertedMatches, error } = await supabase
+      .from("competition_matches")
+      .insert(inserts)
+      .select();
+
     if (error) {
       toast({ title: "Gagal generate bracket", description: error.message, variant: "destructive" });
     } else {
+      // Auto-advance BYE winners to next round
+      if (insertedMatches) {
+        const byeMatches = insertedMatches.filter((m: any) => m.status === "bye" && m.winner_id);
+        const totalR = getRoundCount(bracketParticipants.length);
+        for (const byeMatch of byeMatches) {
+          if (byeMatch.round < totalR) {
+            const nextRound = byeMatch.round + 1;
+            const nextMatchNumber = Math.ceil(byeMatch.match_number / 2);
+            const isTopSlot = byeMatch.match_number % 2 === 1;
+            const nextMatch = insertedMatches.find(
+              (m: any) => m.round === nextRound && m.match_number === nextMatchNumber
+            );
+            if (nextMatch) {
+              const updateField = isTopSlot
+                ? { participant1_id: byeMatch.winner_id }
+                : { participant2_id: byeMatch.winner_id };
+              await supabase.from("competition_matches").update(updateField).eq("id", nextMatch.id);
+            }
+          }
+        }
+      }
       toast({ title: "Bracket berhasil di-generate!" });
       fetchMatches();
     }
@@ -352,6 +378,56 @@ export default function CompetitionDetail() {
   const availableMembers = members.filter((m) => !existingMemberIds.has(m.id));
   const totalRounds = participants.length >= 2 ? getRoundCount(participants.length) : 0;
 
+  // --- Generate Report ---
+  const handleGenerateReport = async () => {
+    if (!comp) return;
+    // Fetch all participants and matches across all categories
+    const catIds = categories.map((c) => c.id);
+    if (catIds.length === 0) {
+      toast({ title: "Tidak ada kategori untuk laporan", variant: "destructive" });
+      return;
+    }
+
+    const [{ data: allParts }, { data: allMatches }] = await Promise.all([
+      supabase.from("competition_participants").select("*").in("category_id", catIds),
+      supabase.from("competition_matches").select("*").in("category_id", catIds),
+    ]);
+
+    // Get member names
+    const memberIds = [...new Set((allParts || []).map((p: any) => p.member_id))];
+    const { data: membersData } = await supabase
+      .from("members")
+      .select("id, nama_lengkap, cabang, unit_latihan")
+      .in("id", memberIds.length > 0 ? memberIds : ["none"]);
+
+    const memberMap = new Map<string, any>();
+    membersData?.forEach((m: any) => memberMap.set(m.id, m));
+
+    const participantsByCategory: Record<string, any[]> = {};
+    const matchesByCategory: Record<string, any[]> = {};
+
+    for (const cat of categories) {
+      participantsByCategory[cat.id] = (allParts || [])
+        .filter((p: any) => p.category_id === cat.id)
+        .map((p: any) => {
+          const m = memberMap.get(p.member_id);
+          return {
+            id: p.id,
+            member_name: m?.nama_lengkap || "?",
+            cabang: m?.cabang || null,
+            unit_latihan: m?.unit_latihan || null,
+            seed_number: p.seed_number,
+            category_id: p.category_id,
+          };
+        });
+
+      matchesByCategory[cat.id] = (allMatches || []).filter((m: any) => m.category_id === cat.id);
+    }
+
+    generateCompetitionReport(comp, categories, participantsByCategory, matchesByCategory);
+    toast({ title: "Laporan berhasil di-download" });
+  };
+
   if (!comp && !loading) {
     return <AppLayout><div className="text-center py-12 text-muted-foreground">Kompetisi tidak ditemukan</div></AppLayout>;
   }
@@ -370,6 +446,9 @@ export default function CompetitionDetail() {
               {comp && `${new Date(comp.tanggal_mulai).toLocaleDateString("id-ID")} • ${comp.lokasi} • ${comp.jumlah_gelanggang} gelanggang`}
             </p>
           </div>
+          <Button variant="outline" size="sm" onClick={handleGenerateReport} disabled={categories.length === 0}>
+            <FileText className="mr-2 h-4 w-4" />Laporan PDF
+          </Button>
         </div>
 
         {/* Categories List */}
