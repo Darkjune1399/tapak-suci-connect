@@ -65,10 +65,10 @@ export function BracketView({ matches, participants, totalRounds, onSelectWinner
       <div className="flex gap-8 min-w-max items-start">
         {roundGroups.map((roundMatches, roundIdx) => {
           const round = roundIdx + 1;
-          // Increase spacing progressively for each round
-          const matchHeight = 96; // px per match card
-          const spaceBetween = matchHeight * (Math.pow(2, roundIdx) - 1) + 24 * roundIdx;
-          const topPadding = roundIdx === 0 ? 0 : (matchHeight + spaceBetween) / 2 - matchHeight / 2;
+          const matchHeight = 80; // px per match card
+          const baseGap = 48; // base gap between round-1 matches
+          const spaceBetween = baseGap * Math.pow(2, roundIdx) + matchHeight * (Math.pow(2, roundIdx) - 1);
+          const topPadding = roundIdx === 0 ? 0 : (spaceBetween - baseGap) / 2;
 
           return (
             <div key={round} className="flex flex-col items-center" style={{ minWidth: 230 }}>
