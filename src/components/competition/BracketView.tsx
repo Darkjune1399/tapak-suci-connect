@@ -84,11 +84,17 @@ export function BracketView({ matches, participants, totalRounds, onSelectWinner
                   const p2Name = getName(match.participant2_id);
                   const isBye = match.status === "bye";
                   const isCompleted = match.status === "completed";
+                  const hasParticipant1 = Boolean(match.participant1_id);
+                  const hasParticipant2 = Boolean(match.participant2_id);
+
                   const canSelectWinner =
                     canEdit &&
                     !isCompleted &&
-                    match.participant1_id &&
-                    (match.participant2_id || isBye);
+                    ((hasParticipant1 && hasParticipant2) ||
+                      (isBye && (hasParticipant1 || hasParticipant2)));
+
+                  const canSelectParticipant1 = canSelectWinner && hasParticipant1;
+                  const canSelectParticipant2 = canSelectWinner && hasParticipant2;
 
                   return (
                     <div key={match.id} className="relative">
@@ -100,7 +106,10 @@ export function BracketView({ matches, participants, totalRounds, onSelectWinner
                       )}
                       {match.waktu_mulai && (
                         <span className="absolute -top-5 right-1 text-[10px] text-muted-foreground">
-                          {new Date(match.waktu_mulai).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                          {new Date(match.waktu_mulai).toLocaleTimeString("id-ID", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </span>
                       )}
                       <div
@@ -110,11 +119,10 @@ export function BracketView({ matches, participants, totalRounds, onSelectWinner
                           isCompleted && "border-primary"
                         )}
                       >
-                        {/* Player 1 */}
                         <button
-                          disabled={!canSelectWinner}
+                          disabled={!canSelectParticipant1}
                           onClick={() =>
-                            canSelectWinner &&
+                            canSelectParticipant1 &&
                             match.participant1_id &&
                             onSelectWinner?.(match.id, match.participant1_id)
                           }
@@ -122,8 +130,8 @@ export function BracketView({ matches, participants, totalRounds, onSelectWinner
                             "w-full flex items-center gap-2 px-3 py-2.5 text-left border-b transition-colors text-foreground",
                             match.winner_id === match.participant1_id &&
                               "bg-primary/10 font-semibold",
-                            canSelectWinner && "hover:bg-muted cursor-pointer",
-                            !canSelectWinner && "cursor-default"
+                            canSelectParticipant1 && "hover:bg-muted cursor-pointer",
+                            !canSelectParticipant1 && "cursor-default"
                           )}
                         >
                           <span className="flex-1 truncate">{p1Name}</span>
@@ -131,11 +139,11 @@ export function BracketView({ matches, participants, totalRounds, onSelectWinner
                             <span className="text-xs text-primary font-bold">W</span>
                           )}
                         </button>
-                        {/* Player 2 */}
+
                         <button
-                          disabled={!canSelectWinner}
+                          disabled={!canSelectParticipant2}
                           onClick={() =>
-                            canSelectWinner &&
+                            canSelectParticipant2 &&
                             match.participant2_id &&
                             onSelectWinner?.(match.id, match.participant2_id)
                           }
@@ -143,8 +151,8 @@ export function BracketView({ matches, participants, totalRounds, onSelectWinner
                             "w-full flex items-center gap-2 px-3 py-2.5 text-left transition-colors text-foreground",
                             match.winner_id === match.participant2_id &&
                               "bg-primary/10 font-semibold",
-                            canSelectWinner && "hover:bg-muted cursor-pointer",
-                            !canSelectWinner && "cursor-default"
+                            canSelectParticipant2 && "hover:bg-muted cursor-pointer",
+                            !canSelectParticipant2 && "cursor-default"
                           )}
                         >
                           <span className="flex-1 truncate">{p2Name}</span>
